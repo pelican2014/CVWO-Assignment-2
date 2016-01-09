@@ -39,8 +39,7 @@ namespace CVWO\HelloWorld {
 		
 		$form['instructions'] = array(
 			'#prefix' => '<div>',
-			'#markup' => t('Enter multiple lines of data to mass import user records. Each line consists of a user\'s name \
-				followed by their email address. A comma separates the name from the email.'),
+			'#markup' => t('Enter multiple lines of data to mass import user records. Each line consists of a user\'s name followed by their email address. A comma separates the name from the email. Please note that comma is not allowed in the user\'s name.'),
 			'#suffix' => '</div>',
 		);
 		
@@ -71,16 +70,24 @@ namespace CVWO\HelloWorld {
 		return $form;
 	}
 
-	// TO DO: change import_form_validate and import_form_submit to process multiple lines of user data
-
 	/**
 	 * Implements import_form_validate
 	 */
 	function helloworld_import_form_validate($form, &$form_state){
-		// valid_email_address is from drupal api
-		// validation function checks whether the email is valid before inserting/updating/deleting
-		if (!valid_email_address($form_state['values']['email'])){
-			form_set_error('email', t('Please enter a valid email address.'));
+		// Check that each line contains a comma
+		// Extract email -> array_slice after the first comma on each line
+		// Validate email
+		$records = explode(PHP_EOL, $form_state['values']['text']);
+		foreach ($records as $record) {
+			$components = explode(',', $record);
+			if (count($components) == 1) {
+				form_set_error('text', t('Please ensure there is at least one comma on every line.'));
+			} else {
+				$email = trim(implode(array_slice($components, 1)));
+				if (!valid_email_address($email)){
+					form_set_error('text', t('%email is not a valid email address.', array('%email' => $email)));
+				}
+			}
 		}
 	}
 
@@ -93,10 +100,10 @@ namespace CVWO\HelloWorld {
 
 		switch($button_name) {
 			case 'Add': 
-				if (add_user($form_state['values'])) {
-					drupal_set_message(t('%name has been successfully added', array('%name' => $form_state['values']['name'])));
+				if (import_user_records($form_state['values'])) {
+					drupal_set_message(t('User records have been successfully imported.'));
 				} else {
-					drupal_set_message(t('An error was encountered while adding %name', array('%name' => $form_state['values']['name'])));
+					drupal_set_message(t('An error was encountered while importing user records.'));
 					$error = TRUE;
 				}
 				break;

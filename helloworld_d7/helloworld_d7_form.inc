@@ -26,7 +26,7 @@ namespace CVWO\HelloWorld {
 			$values = $form_state['values'];
 		} else {
 			$values = array(
-				'text' => '',
+				'name' => '',
 				'email' => '',
 				'comment' => '',
 			);

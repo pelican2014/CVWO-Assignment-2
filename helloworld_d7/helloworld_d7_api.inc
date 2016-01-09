@@ -72,28 +72,43 @@ namespace CVWO\HelloWorld {
 		return $id;
 	}
 
-	/** NEW ADDITION */
-	function batchadd_user($values) {
+	/**
+	 * Function mass import multiple lines of user records
+	 *
+	 * @param $values
+	 *    Will contain the array of values needed to add a new row inside 
+	 * the Helloworld table. I.e. $values['text'], $values['comment']
+	 */
+	function import_user_records($values) {
 		global $user;
 		$username = $user->name;
-		$message = $username . ' added a user: ' . $values['name'];
-		$txn = db\transaction();
-		
-		try {
-			$id = db\insert(HELLOWORLD_TABLE)
-				->fields(array(
-					'name' => $values['name'],
-					'email' => $values['email'],
-					'comment' => $values['comment'],
-				))
-				->execute();
-		} catch (Exception $e) {
-			$txn->rollback();
-			watchdog_exception('type', $e);
-			return FALSE;
+
+		$records = explode(PHP_EOL, $values['text']);
+		foreach ($records as $record) {
+			$components = explode(',', $record);
+			$name       = trim($components[0]);
+			$email = trim(implode(array_slice($components, 1)));
+
+			$message = $username . ' added a user: ' . $name;
+			$txn = db\transaction();
+			
+			try {
+				$id = db\insert(HELLOWORLD_TABLE)
+					->fields(array(
+						'name' => $name,
+						'email' => $email,
+						'comment' => $values['comment'],
+					))
+					->execute();
+			} catch (Exception $e) {
+				$txn->rollback();
+				watchdog_exception('type', $e);
+				return FALSE;
+			}
+
+			$txn->commit($message, ADD_AUDIT ,MODULE_NAME);
 		}
 
-		$txn->commit($message, ADD_AUDIT ,MODULE_NAME);
 		return $id;
 	}
 
