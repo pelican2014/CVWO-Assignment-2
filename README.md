@@ -3,7 +3,7 @@
 * A0143972Y
 
 #### Online working application
-Please visit [xiyaproject.com/drupal](http://www.xiyaproject.com/drupal) for working application.
+Please visit [xiyaproject.com/drupal](http://www.xiyaproject.com/drupal) for working application. (Accessible from Jan to Mar 2016)
 
 Username: admin
 
